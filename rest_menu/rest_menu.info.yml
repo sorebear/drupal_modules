@@ -1,0 +1,5 @@
+name: REST Menu
+core: 8.x
+type: module
+description: Creates copies of menus as Entities to allow exporting Menus
+package: 360 Custom

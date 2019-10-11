@@ -1,0 +1,6 @@
+name: JSON to CSV Aggregator
+core: 8.x
+type: module
+description: JSON to CSV Aggregator
+package: 360 Custom
+configure: json_to_csv_aggregator.settings

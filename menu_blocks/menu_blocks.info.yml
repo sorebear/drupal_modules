@@ -1,0 +1,8 @@
+name: Menu Blocks
+type: module
+description: An alternative to Mega Menus. This allows you to add a block field to each menu item.
+core: 8.x
+
+package: 360 Custom
+dependencies:
+  - drupal:menu_ui

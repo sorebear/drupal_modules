@@ -1,0 +1,8 @@
+<?php
+
+function recurring_event_page_attachments_alter(array &$page) {
+  $config = \Drupal::config('recurring_event.settings');
+  // $page['#attached']['library'][] = 'recurring_event/recurring_event';
+
+  // $page['#attached']['drupalSettings']['recurringEvent']['test'] = $config->get('whitelisted_sites');
+}

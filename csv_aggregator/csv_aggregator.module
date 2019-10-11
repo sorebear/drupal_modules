@@ -1,0 +1,6 @@
+<?php
+
+function csv_aggregator_page_attachments_alter(array &$page) {
+  $config = Drupal::config('csv_aggregator.settings');
+  $page['#attached']['library'][] = 'csv_aggregator/csv_aggregator';
+}

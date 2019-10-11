@@ -1,0 +1,4 @@
+administer recurring event:
+  title: Recurring Event
+  description: Create Events with Optional Recurring
+  restrict access: TRUE

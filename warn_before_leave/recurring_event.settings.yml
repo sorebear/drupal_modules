@@ -1,0 +1,5 @@
+recurring_event.settings:
+  title: Warn Before Leave
+  description: When the user clicks an external link, this module will display a modal warning.
+  parent: system.admin_config_content
+  route_name: recurring_event.settings

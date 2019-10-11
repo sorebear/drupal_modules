@@ -1,0 +1,78 @@
+<?php
+
+use Drupal\node\Entity\Node;
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_entity_presave()
+ * 
+ * Whenever a menu is saved, this function will extract
+ * the important details and place them as a JSON string
+ * in a node entity with the content type "REST Menu"
+ * 
+ * This allows you to export the essential menu data in a feed,
+ * As you currently can't select a menu for export
+ */
+function rest_menu_entity_presave(EntityInterface $entity) {
+  $entityType = $entity->getEntityTypeId();
+
+  // Check that a menu or menu link is being edited
+  if ($entityType == 'menu_link_content' || $entityType == 'menu') {
+    $menuMachineName = $entityType == 'menu_link_content' ? $entity->getMenuName() : $entity->id();
+  
+    // Get the menu tree and then get 
+    // the specific menu we are working on.
+    $menuTree = \Drupal::menuTree();
+    $parameters = $menuTree->getCurrentRouteMenuTreeParameters($menuMachineName);
+    $tree = $menuTree->load($menuMachineName, $parameters);
+  
+    $dataArray = array();
+  
+    // Loop through all the items in the menu place
+    // essential information in our data array
+    foreach ($tree as $branch) {
+      $isExternal = $branch->link->getUrlObject()->isExternal();
+      $hasChildren = $branch->hasChildren;
+
+      if ($hasChildren) {
+        kint($tree);
+        kint($branch->link->getUrlObject());
+        kint($branch->link->getUrlObject()->getRouteParameters());
+      }
+  
+      $linkObj = new stdClass();
+      $linkObj->title = $branch->link->getTitle();
+      $linkObj->isExternal = $isExternal;
+      $linkObj->path = $isExternal ? $branch->link->getUrlObject()->getUri() : $branch->link->getUrlObject()->getInternalPath();
+      $linkObj->hasChildren = $hasChildren;
+      $linkObj->depth = $branch->depth;
+      $linkObj->options = $branch->link->getUrlObject()->getOptions();
+      $linkObj->inActiveTrail = $branch->inActiveTrail;
+      $linkObj->routeName = $branch->link->getRouteName();
+      
+      array_push($dataArray, $linkObj);
+    }  
+
+    // Get the node with title matching our menu's machine name
+    $node_storage = \Drupal::entityTypeManager()->getStorage('node');
+    $nid = \Drupal::entityQuery('node')->condition('title', $menuMachineName)->execute();
+    $nodes = $node_storage->loadMultiple($nid);
+    $node = reset($nodes);
+
+    // If the node doesn't exist, create a new one
+    if ($node == NULL) {
+      echo 'Create New Node<br>';
+      $node = Node::create(array(
+        'type' => 'rest_menu',
+        'title' => $menuMachineName,
+        'langcode' => 'en',
+        'uid' => '1'
+      ));
+    }
+
+    // Take the data we collected above and
+    // set it as a JSON string in the node body
+    $node->set('body', json_encode($dataArray));
+    $node->save();
+  }    
+}

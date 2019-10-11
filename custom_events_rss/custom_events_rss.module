@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Custom Events Feeds Views module help and theme functions.
+ */
+
+\Drupal::moduleHandler()->loadInclude('custom_events_rss', 'inc', 'custom_events_rss.theme');
+
+/**
+ * Implements hook_theme().
+ */
+function custom_events_rss_theme($existing, $type, $theme, $path) {
+  return [
+    'custom_events_rss' => [
+      'file' => 'custom_events_rss.theme.inc',
+    ],
+  ];
+}

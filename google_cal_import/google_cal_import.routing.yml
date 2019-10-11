@@ -1,0 +1,7 @@
+google_cal_import.settings:
+  path: '/admin/config/user-interface/google-cal-import'
+  defaults:
+    _title: 'Google Calendar Import'
+    _form: '\Drupal\google_cal_import\Form\GoogleCalImportForm'
+  requirements:
+    _permission: 'administer google cal import'

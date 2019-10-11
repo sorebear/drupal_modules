@@ -1,0 +1,7 @@
+sidemenu:
+  version: 1.x
+  css:
+    theme:
+      css/sidemenu.css
+  js:
+    js/sidemenu.js    

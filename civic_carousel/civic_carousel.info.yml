@@ -1,0 +1,7 @@
+name: Civic Carousel
+type: module
+description: Adds a Carousel option to View Formats.
+package: 360 Custom
+core: 8.x
+dependencies:
+  - drupal:views

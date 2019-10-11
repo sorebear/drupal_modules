@@ -1,0 +1,17 @@
+default_off:
+  version: 1.x
+  css:
+    theme:
+      css/button-styles.css: {}
+      css/default-off.css: {}
+  js:
+    js/toggle-admin.js: {}
+
+default_on:
+  version: 1.x
+  css:
+    theme:
+      css/button-styles.css: {}
+      css/default-on.css: {}
+  js:
+    js/toggle-admin.js: {}

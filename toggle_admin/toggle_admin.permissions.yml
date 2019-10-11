@@ -1,0 +1,4 @@
+administer toggle admin:
+  title: Toggle Admin Menu
+  description: Optional controls to toggle the admin menu display
+  restrict access: TRUE

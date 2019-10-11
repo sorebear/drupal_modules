@@ -1,0 +1,7 @@
+recurring_event:
+  version: 1.x
+  css:
+    theme:
+      css/recurring_event.css: {}
+  js:
+    js/recurring_event.js: {}

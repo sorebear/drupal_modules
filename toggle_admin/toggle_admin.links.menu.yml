@@ -1,0 +1,5 @@
+toggle_admin.settings:
+  title: Admin Toggle Settings
+  description: Enable/disable the module functionality or set it for only specific users.
+  parent: system.admin_config_ui
+  route_name: toggle_admin.settings

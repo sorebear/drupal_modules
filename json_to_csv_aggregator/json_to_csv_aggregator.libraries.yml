@@ -1,0 +1,7 @@
+json_to_csv_aggregator:
+  version: 1.x
+  css:
+    theme:
+      css/json_to_csv_aggregator.css: {}
+  js:
+    js/json_to_csv_aggregator.js: {}

@@ -1,0 +1,90 @@
+<?php
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Database\Connection;
+use Drupal\paragraphs\Entity\Paragraph;
+
+/**
+ * Implements hook_entity_presave().
+ */
+function recurring_events_node_presave(EntityInterface $node) {
+  
+  // Make sure it's the Event content type.
+  if ($node->getType() == 'event') {
+
+    $database = \Drupal::database();
+    $recurringResults = $database
+      ->select('date_recur__node__field_recurring_date', 't')
+      ->fields('t', ['field_recurring_date_value', 'field_recurring_date_end_value', 'revision_id', 'field_delta', 'delta'])
+      ->condition('entity_id', $node->id())
+      ->execute()
+      ->fetchAll();
+
+    $instanceResults = $database
+      ->select('node__field_date_instances', 't')
+      ->fields('t', ['field_date_instances_target_id'])
+      ->condition('entity_id', $node->id())
+      ->condition('deleted', '0')
+      ->execute()
+      ->fetchAll();
+
+    echo '<h2>Instance Results</h2>';
+    kint($instanceResults);
+    kint($instanceResults['0']->field_date_instances_target_id);
+    
+    $instanceInfo = [];
+
+    foreach ($instanceResults as $result) {
+      echo '<p>In Foreach</p>';
+      kint($result);
+      $startDate = $database
+        ->select('paragraph__field_instance_start_date', 't')
+        ->fields('t', ['field_instance_start_date_value'])
+        ->condition('entity_id', $result->field_date_instances_target_id)
+        ->execute()
+        ->fetchAll();
+
+      kint($startDate['0']);
+
+      $instanceInfo[$result->field_date_instances_target_id][] = $startDate['0'];
+    }
+
+    echo '<h2>Instance Info</h2>';
+    kint($instanceInfo);
+
+    echo '<h2>Recurring Results</h2>';
+    kint($recurringResults);
+
+    kill();
+
+    $paragraph = Paragraph::create(['type' => 'date_instance']);
+    $paragraph->set('field_instance_start_date', $recurringResults['0']->field_recurring_date_value);
+    $paragraph->set('field_instance_start_time', $recurringResults['0']->field_recurring_date_end_value);
+    $paragraph->isNew();
+    $paragraph->save();
+
+
+    $current = $node->get('field_combined_dates')->getValue();
+    $current[] = array(
+      'target_id' => $paragraph->id(),
+      'target_revision_id' => $paragraph->getRevisionId(),
+    );
+    $node->set('field_combined_dates', $current);
+    // $node->save();
+
+    echo '<h2>Current</h2>';
+    kint($current);
+
+    echo '<h2>Node</h2>';
+    kint($node);
+    // kill();
+  }
+}
+
+function recurring_events_node_insert(EntityInterface $entity) {
+
+}
+
+function recurring_events_node_update(EntityInterface $node) {
+  
+}

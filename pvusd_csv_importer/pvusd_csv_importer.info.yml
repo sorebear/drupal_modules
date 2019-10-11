@@ -1,0 +1,13 @@
+name: PVUSD CSV Importer
+type: module
+description: 'Import content from CSV.'
+package: 360 Custom
+# version: '8.x-3.0'
+# core: '8.x'
+configure: pvusd_csv_importer.settings
+
+# Information added by Drupal.org packaging script on 2019-01-04
+version: '8.x-1.4'
+core: '8.x'
+project: 'pvusd_csv_importer'
+datestamp: 1546599486

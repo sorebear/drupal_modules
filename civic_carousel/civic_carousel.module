@@ -1,0 +1,13 @@
+<?php
+
+/**
+  * Implements hook_theme()
+  */
+function civic_carousel_theme($existing, $type, $theme, $path) {
+  return array(
+    'civic_carousel' => array(
+      'variables' => array('view' => NULL, 'rows' => NULL),
+      'path' => drupal_get_path('module', 'civic_carousel') . '/templates',
+    ),
+  );
+}

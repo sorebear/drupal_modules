@@ -1,0 +1,5 @@
+json_to_csv_aggregator.settings:
+  path: '/admin/config/user-interface/json-to-csv-aggregator'
+  defaults:
+    _title: 'JSON to CSV Aggregator'
+    _form: '\Drupal\json_to_csv_aggregator\Form\JsonToCsvAggregatorForm'

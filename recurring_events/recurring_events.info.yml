@@ -1,0 +1,13 @@
+name: 360 Recurring Events
+core: 8.x
+type: module
+description: This module creates an Event Content Type that allows for recurring dates/events.
+package: 360 Custom
+configure: recurring_event.settings
+
+dependencies:
+  - drupal:paragraphs
+  - drupal:time_field
+  - drupal:date_recur
+  - drupal:date_recur_modular
+  - drupal:views

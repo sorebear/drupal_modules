@@ -1,0 +1,6 @@
+name: Csv Aggregator
+core: 8.x
+type: module
+description: Csv Aggregator
+package: 360 Custom
+configure: csv_aggregator.settings

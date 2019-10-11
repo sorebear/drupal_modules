@@ -1,0 +1,5 @@
+csv_aggregator.settings:
+  title: Csv Aggregator
+  description: Csv Aggregator description.
+  parent: system.admin_config_ui
+  route_name: csv_aggregator.settings

@@ -1,0 +1,7 @@
+recurring_event.settings:
+  path: '/admin/config/content/recurring-event'
+  defaults:
+    _title: 'Create Recurring Event'
+    _form: '\Drupal\recurring_event\Form\RecurringEventSettingsForm'
+  requirements:
+    _permission: 'administer recurring event'

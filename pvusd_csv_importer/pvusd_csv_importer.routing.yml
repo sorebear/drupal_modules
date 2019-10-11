@@ -1,0 +1,7 @@
+pvusd_csv_importer.form:
+  path: '/admin/config/development/pvusd-csv-importer'
+  defaults:
+    _form: '\Drupal\pvusd_csv_importer\Form\ImporterForm'
+    _title: 'PVUSD Import CSV'
+  requirements:
+    _permission: 'administer site configuration'

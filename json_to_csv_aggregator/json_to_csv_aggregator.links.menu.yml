@@ -1,0 +1,5 @@
+json_to_csv_aggregator.settings:
+  title: JSON to CSV Aggregator
+  description: JSON to CSV Aggregator
+  parent: system.admin_config_ui
+  route_name: json_to_csv_aggregator.settings

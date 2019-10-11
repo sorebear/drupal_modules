@@ -1,0 +1,8 @@
+body:not(.toggle-admin) #toolbar-administration {
+  display: none !important;
+}
+
+body:not(.toggle-admin) {
+  margin: 0 !important;
+  padding-top: 0 !important;
+}

@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Install file for menu_blocks module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function menu_blocks_uninstall() {
+  // Remove link icons from menu_links table.
+  $result = db_query("SELECT id, link__options FROM {menu_link_content_data} WHERE link__options LIKE '%\"menu_block\"%'");
+
+  foreach ($result as $record) {
+    $options = unserialize($record->link__options);
+    unset($options['menu_block']);
+
+    db_query("UPDATE {menu_link_content_data} SET link__options = :options WHERE id = :id", [
+      ':options' => serialize($options),
+      ':id'      => $record->id
+    ]);
+  }
+}

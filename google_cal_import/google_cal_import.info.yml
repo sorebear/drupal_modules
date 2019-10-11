@@ -1,0 +1,5 @@
+name: Google Calendar Import
+core: 8.x
+type: module
+description: Import a Google Calendar
+package: 360 Custom

@@ -1,0 +1,5 @@
+google_cal_import.settings:
+  title: Google Calendar Import
+  description: Import a Publically Shared Google Calendar
+  parent: system.admin_config_ui
+  route_name: google_cal_import.settings

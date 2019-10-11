@@ -1,0 +1,167 @@
+<?php
+
+/**
+ * @file
+ * Contains menu_blocks.module
+ */
+
+use Drupal\Component\Utility\Html;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use \Drupal\menu_link_content\Entity\MenuLinkContent;
+
+
+/**
+ * Implements hook_help().
+ */
+function menu_blocks_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.menu_blocks':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Menu Blocks') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function menu_block_form_menu_link_content_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $menu_link = $form_state->getFormObject()->getEntity();
+  $menu_link_options = $menu_link->link->first()->options ?: [];
+
+  $form['menu_block'] = [
+    '#type' => 'textfield',
+    '#title' => t('Menu Block'),
+    '#default_value' => !empty($menu_link_options['menu_block']) ? $menu_link_options['menu_block'] : '',
+  ];
+
+  $form['actions']['submit']['#submit'][] = 'menu_blocks_menu_link_content_form_submit';
+}
+
+/**
+ * Process the submitted form.
+ *
+ * @param array $form
+ *   Form Array.
+ * @param FormStateInterface $form_state
+ *   Form State Interface.
+ */
+function menu_blocks_menu_link_content_form_submit(array $form, FormStateInterface $form_state) {
+  $menu_block = $form_state->getValue('menu_block');
+  // $icon_appearance = $form_state->getValue('fa_icon_appearance');
+
+  $options = [
+    'menu_block' => !empty($menu_block) ? Html::escape($menu_block) : '',
+    // 'fa_icon_appearance' => !empty($icon_appearance) ? Html::escape($icon_appearance) : 'before',
+  ];
+
+  /** @var MenuLinkContent $menu_link */
+  $menu_link = $form_state->getFormObject()->getEntity();
+  $menu_link_options = $menu_link->link->first()->options;
+
+  $merged = array_merge($menu_link_options, $options);
+
+  $menu_link->link->first()->options = $merged;
+  $menu_link->save();
+}
+
+// /**
+//  * Implements hook_form_BASE_FORM_ID_alter().
+//  */
+function menu_blocks_form_menu_link_edit_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $options = $form_state->getBuildInfo()['args'][0]->getOptions();
+
+  $form['menu_block'] = [
+    '#type' => 'textfield',
+    '#title' => t('Menu Block'),
+    '#default_value' => !empty($options['menu_block']) ? $options['menu_block'] : '',
+  ];
+
+  $form['#submit'][] = 'menu_blocks_form_menu_link_edit_submit';
+}
+
+/**
+ * Process the submitted form.
+ *
+ * @param array $form
+ *   Array Form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   Form Interface.
+ */
+function menu_blocks_form_menu_link_edit_submit(array $form, FormStateInterface $form_state) {
+  $options = $form_state->getBuildInfo()['args'][0]->getOptions();
+  $menu_link_id = $form_state->getValue('menu_link_id');
+
+  $menu_block = $form_state->getValue('menu_block');
+  // $icon_appearance = $form_state->getValue('fa_icon_appearance');
+
+  $options['fa_icon'] = !empty($menu_block) ? Html::escape($menu_block) : '';
+  // $options['fa_icon_appearance'] = !empty($icon_appearance) ? Html::escape($icon_appearance) : 'before';
+
+  if (!empty($menu_link_id)) {
+    $query = \Drupal::database()->update('menu_tree');
+    $query->fields([
+      'options' => serialize($options),
+    ]);
+    $query->condition('id', $menu_link_id);
+    $query->execute();
+
+    $config_factory = \Drupal::configFactory();
+    $config = $config_factory->getEditable('menu_blocks.settings');
+
+    $icons = $config->get('menu_blocks');
+    // Array key cannot contain dot in the config.
+    $config_key = str_replace('.', '_', $menu_link_id);
+
+    if (empty($options['menu_block'])) {
+      if (isset($icons[$config_key])) {
+        unset($icons[$config_key]);
+      }
+    }
+    else {
+      $icons[$config_key] = [
+        'icon' => $options['menu_block'],
+        // 'appearance' => $options['fa_icon_appearance'],
+      ];
+    }
+
+    $config->set('menu_blocks', $icons);
+    $config->save();
+  }
+}
+
+/**
+ * Implements hook_menu_links_discovered_alter().
+ */
+function menu_blocks_menu_links_discovered_alter(&$links) {
+  // After clearing the site's cache, the options were cleared from the
+  // menu_tree database table (I'm not sure if this is a bug or normal
+  // behaviour)... but we need to re-apply fa_icon on each menu link item.
+  $config = \Drupal::config('menu_blocks.settings');
+  $icons = $config->get('menu_blocks');
+
+  foreach ($links as $link_id => &$link) {
+    if (empty($link['id'])) {
+      continue;
+    }
+
+    // Array key cannot contain dot in the config.
+    $config_key = str_replace('.', '_', $link_id);
+
+    if (!empty($icons[$config_key])) {
+      // Array is the new storage format.
+      if (is_array($icons[$config_key])) {
+        $link['options']['menu_block'] = !empty($icons[$config_key]['block']) ? $icons[$config_key]['block'] : '';
+        // $link['options']['fa_icon_appearance'] = !empty($icons[$config_key]['appearance']) ? $icons[$config_key]['appearance'] : 'before';
+      } // BC, legacy config (when appearance was not supported).
+      else {
+        $link['options']['menu_block'] = !empty($icons[$config_key]) ? $icons[$config_key] : '';
+        // $link['options']['fa_icon_appearance'] = 'before';
+      }
+    }
+  }
+}

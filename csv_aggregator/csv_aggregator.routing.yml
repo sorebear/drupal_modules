@@ -1,0 +1,5 @@
+csv_aggregator.settings:
+  path: '/admin/config/user-interface/csv-aggregator'
+  defaults:
+    _title: 'Csv Aggregator'
+    _form: '\Drupal\csv_aggregator\Form\CsvAggregatorForm'
