@@ -1,0 +1,10 @@
+<?php
+
+use \Drupal\google_cal_import\Controller\GoogleCalImportController;
+
+function google_cal_import_cron() {
+  GoogleCalImportController::getExistingEvents();
+  GoogleCalImportController::getGoogleCalendar();  
+  GoogleCalImportController::syncCalendar();
+  GoogleCalImportController::deleteRemovedEvents();
+}

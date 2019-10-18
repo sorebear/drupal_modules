@@ -35,11 +35,189 @@ class GoogleCalImportForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('google_cal_import.settings');
+    
+    $taxonomy_term_options = array();
 
-    $form['feed_url'] = array(
+    $vocabs = \Drupal\taxonomy\Entity\Vocabulary::loadMultiple();
+    foreach ($vocabs as $vocab) {
+      $taxonomy_term_options[$vocab->id()] = array();
+      $tids = \Drupal::entityQuery('taxonomy_term')->condition('vid', $vocab->id())->execute();
+      $terms = \Drupal\taxonomy\Entity\Term::loadMultiple($tids);
+
+      foreach ($terms as $term) {
+        $taxonomy_term_options[$vocab->id()][$term->id()] = t($term->getName());
+      }
+    }
+
+    // kint($taxonomy_term_options['event_category']);
+
+    // kill();
+
+    // kint($taxonomy_term_options);
+
+    $form['feed_1'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Feed 1'),
+    );
+
+    $form['feed_1']['feed_url_1'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Feed Url'),
-      '#default_value' => $config->get('feed_url') ?: $this->t(''),
+      '#title' => $this->t('Feed Url 1'),
+      '#default_value' => $config->get('feed_url_1') ?: $this->t(''),
+    );
+
+    $form['feed_1']['should_map_category_1'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Map calendar to taxonomy'),
+      '#default_value' => $config->get('should_map_category_1') ?: FALSE,
+    );
+
+    $form['feed_1']['taxonomy_term_1'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Taxonomy Term'),
+      '#options' => $taxonomy_term_options,
+      '#default_value' => $config->get('taxonomy_term_1') ?: NULL,
+      '#states' => [
+        'visible' => [
+          'input[name="should_map_category_1"]' => ['checked' => TRUE]
+        ]
+      ]
+    );
+
+    $form['feed_2'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Feed 2'),
+      '#states' => [
+        'invisible' => [
+          'input[name="feed_url_1"]' => ['value' => '']
+        ]
+      ]
+    );
+
+    $form['feed_2']['feed_url_2'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Feed Url 2'),
+      '#default_value' => $config->get('feed_url_2') ?: $this->t(''),
+    );
+
+    $form['feed_2']['should_map_category_2'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Map calendar to taxonomy'),
+      '#default_value' => $config->get('should_map_category_2') ?: FALSE,
+    );
+
+    $form['feed_2']['taxonomy_term_2'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Taxonomy Term'),
+      '#options' => $taxonomy_term_options,
+      '#default_value' => $config->get('taxonomy_term_2') ?: NULL,
+      '#states' => [
+        'visible' => [
+          'input[name="should_map_category_2"]' => ['checked' => TRUE]
+        ]
+      ]
+    );
+
+    $form['feed_3'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Feed 3'),
+      '#states' => [
+        'invisible' => [
+          'input[name="feed_url_2"]' => ['value' => '']
+        ]
+      ]
+    );
+
+    $form['feed_3']['feed_url_3'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Feed Url 3'),
+      '#default_value' => $config->get('feed_url_3') ?: $this->t(''),
+    );
+
+    $form['feed_3']['should_map_category_3'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Map calendar to taxonomy'),
+      '#default_value' => $config->get('should_map_category_3') ?: FALSE,
+    );
+
+    $form['feed_3']['taxonomy_term_3'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Taxonomy Term'),
+      '#options' => $taxonomy_term_options,
+      '#default_value' => $config->get('taxonomy_term_3') ?: NULL,
+      '#states' => [
+        'visible' => [
+          'input[name="should_map_category_3"]' => ['checked' => TRUE]
+        ]
+      ]
+    );
+
+    $form['feed_4'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Feed 4'),
+      '#states' => [
+        'invisible' => [
+          'input[name="feed_url_3"]' => ['value' => '']
+        ]
+      ]
+    );
+
+    $form['feed_4']['feed_url_4'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Feed Url 4'),
+      '#default_value' => $config->get('feed_url_4') ?: $this->t(''),
+    );
+
+    $form['feed_4']['should_map_category_4'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Map calendar to taxonomy'),
+      '#default_value' => $config->get('should_map_category_4') ?: FALSE,
+    );
+
+    $form['feed_4']['taxonomy_term_4'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Taxonomy Term'),
+      '#options' => $taxonomy_term_options,
+      '#default_value' => $config->get('taxonomy_term_4') ?: NULL,
+      '#states' => [
+        'visible' => [
+          'input[name="should_map_category_4"]' => ['checked' => TRUE]
+        ]
+      ]
+    );
+
+    $form['feed_5'] = array(
+      '#type' => 'fieldset',
+      '#title' => $this->t('Feed 5'),
+      '#states' => [
+        'invisible' => [
+          'input[name="feed_url_4"]' => ['value' => '']
+        ]
+      ]
+    );
+
+    $form['feed_5']['feed_url_5'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('Feed Url 5'),
+      '#default_value' => $config->get('feed_url_5') ?: $this->t(''),
+    );
+
+    $form['feed_5']['should_map_category_5'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Map calendar to taxonomy'),
+      '#default_value' => $config->get('should_map_category_5') ?: FALSE,
+    );
+
+    $form['feed_5']['taxonomy_term_5'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Taxonomy Term'),
+      '#options' => $taxonomy_term_options,
+      '#default_value' => $config->get('taxonomy_term_5') ?: NULL,
+      '#states' => [
+        'visible' => [
+          'input[name="should_map_category_5"]' => ['checked' => TRUE]
+        ]
+      ]
     );
 
     return parent::buildForm($form, $form_state);
@@ -50,12 +228,23 @@ class GoogleCalImportForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Get the iCal string from the URL
-    // $config = $this->config('google_cal_import.settings');
-    // $values = $form_state->getValues();
-    // $config->set('feed_url', $values['feed_url']);
-    // $config->save();
+    $config = $this->config('google_cal_import.settings');
+    $config->delete();
+    $values = $form_state->getValues();
+    for ($i = 1; $i <= 5; $i++) {
+      $config->set('feed_url_' . $i, $values['feed_url_' . $i]);
+      $config->set('should_map_category_' . $i, $values['should_map_category_' . $i]);
+      $config->set('taxonomy_term_' . $i, $values['taxonomy_term_' . $i]);
+    }
+  
+    $config->save();
 
-    // // Get Current Event Nodes
+    kint($config);
+    // kill();
+
+    drupal_set_message(t('Configuration saved.'));
+
+    // Get Current Event Nodes
     // $node_stoarge = \Drupal::entityTypeManager()->getStorage('node');
     // $eventNids = \Drupal::entityQuery('node')->condition('type', 'events')->execute();
     // $eventNodes = $node_stoarge->loadMultiple($eventNids);
@@ -73,6 +262,8 @@ class GoogleCalImportForm extends ConfigFormBase {
     // kint($eventNodes['5']->get('field_event_date')->getValue());
     
 
+    // kint($config);
+
     // $url = $values['feed_url'];
     // $ch = curl_init();
     // curl_setopt($ch, CURLOPT_URL, $url);
@@ -88,6 +279,11 @@ class GoogleCalImportForm extends ConfigFormBase {
 
     // // Create an iCal object using the ZCiCal library
     // $icalobj = new ZCiCal($icalstring);
+
+    // kint($icalobj->tree->child[1]->data);
+    // kint($icalobj->tree->child[1]->data['ATTACH']->getValues());
+    // kint($icalobj->tree->child[1]->data['ATTACH']->getParameters());
+    // // kill();
 
     // $eventsToCreate = [];
     // $eventsToUpdate = [];
@@ -160,32 +356,32 @@ class GoogleCalImportForm extends ConfigFormBase {
     // kill();
 
 
-    $batch = [
-      'title' => t('Synching Calendar'),
-      'operations' => [
-        [
-          '\Drupal\google_cal_import\Controller\GoogleCalImportController::getExistingEvents',
-          []
-        ],
-        [
-          '\Drupal\google_cal_import\Controller\GoogleCalImportController::getGoogleCalendar',
-          []
-        ],
-        [
-          '\Drupal\google_cal_import\Controller\GoogleCalImportController::syncCalendar', 
-          []
-        ],
-        [
-          '\Drupal\google_cal_import\Controller\GoogleCalImportController::deleteRemovedEvents',
-          []
-        ]
-      ],
-      'finished' => '\Drupal\google_cal_import\Controller\GoogleCalImportController::syncComplete',
-      'init_message' => t('Initializing GoogleCal sync'),
-      'progress_message' => t('Processed @current of @total.'),
-      'error_message' => t('There was an issue syncing your calendar'),
-    ];
+    // $batch = [
+    //   'title' => t('Synching Calendar'),
+    //   'operations' => [
+    //     [
+    //       '\Drupal\google_cal_import\Controller\GoogleCalImportController::getExistingEvents',
+    //       []
+    //     ],
+    //     [
+    //       '\Drupal\google_cal_import\Controller\GoogleCalImportController::getGoogleCalendar',
+    //       []
+    //     ],
+    //     [
+    //       '\Drupal\google_cal_import\Controller\GoogleCalImportController::syncCalendar', 
+    //       []
+    //     ],
+    //     [
+    //       '\Drupal\google_cal_import\Controller\GoogleCalImportController::deleteRemovedEvents',
+    //       []
+    //     ]
+    //   ],
+    //   'finished' => '\Drupal\google_cal_import\Controller\GoogleCalImportController::syncComplete',
+    //   'init_message' => t('Initializing GoogleCal sync'),
+    //   'progress_message' => t('Processed @current of @total.'),
+    //   'error_message' => t('There was an issue syncing your calendar'),
+    // ];
 
-    batch_set($batch);
+    // batch_set($batch);
   }
 }

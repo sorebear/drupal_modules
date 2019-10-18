@@ -15,10 +15,7 @@ require_once(drupal_get_path('module', 'google_cal_import') . '/src/ical_parser/
 class GoogleCalImportController extends ControllerBase {
   protected static $existingEvents = [];
   protected static $icalEvents = [];
-  protected static $icalobj;
-  private static $countCreated = 0;
-  private static $countUpdated = 0;
-  private static $countDeleted = 0;
+  protected static $icalobjs = [];
 
   /**
    * Get Existing Event Nodes
@@ -44,20 +41,28 @@ class GoogleCalImportController extends ControllerBase {
     $config = \Drupal::config('google_cal_import.settings');
     $url = $config->get('feed_url');
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, FALSE);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    for ($i = 1; $i <= 10; $i++) {
+      $url = $config->get('feed_url_' . $i);
+      if (!empty($url)) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, FALSE);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
-    $icalstring = curl_exec($ch);
-    curl_close($ch);
+        $icalstring = curl_exec($ch);
+        curl_close($ch);
 
-    if (!$icalstring) {
-      return;
+        if (!$icalstring) {
+          return;
+        }
+
+        // Create an iCal object using the ZCiCal library
+        self::$icalobjs[] = [
+          'data' => new ZCiCal($icalstring),
+          'cal_category' => $config->get('should_map_category_' . $i) ? $config->get('taxonomy_term_' . $i) : NULL,
+        ];
+      }
     }
-
-    // Create an iCal object using the ZCiCal library
-    self::$icalobj = new ZCiCal($icalstring);
   }
 
   /**
@@ -66,96 +71,81 @@ class GoogleCalImportController extends ControllerBase {
    * If the event doesn't exist, create a new node 
    */
   public static function syncCalendar() {
-    $eventsToCreate = [];
-    $eventsToUpdate = [];
+    foreach (self::$icalobjs as $icalobj) {
+      $eventsToCreate = [];
+      $eventsToUpdate = [];
+  
+      $default_timezone = $icalobj['data']->tree->data['X-WR-TIMEZONE']->value['0'];
+  
+      foreach ($icalobj['data']->tree->child as $icalNode) {
+        if ($icalNode->name == 'VEVENT') {
+          $start_date = new DrupalDateTime($icalNode->data['DTSTART']->value['0'], $default_timezone);
+          $end_date = new DrupalDateTime($icalNode->data['DTEND']->value['0'], $default_timezone);
+          $diff = $start_date->diff($end_date);
+  
+          if ($diff->d != 0 && $diff->h == 0 && $diff->i == 0) {
+            $end_date = $end_date->getPhpDateTime()->modify('-1 minutes')->format('Y-m-d\TH:i:s');
+            $end_date = new DrupalDateTime($end_date);
+          }
+  
+          $event = array();
+          $event['type'] = 'events';
+          $event['title'] = $icalNode->data['SUMMARY']->value;
+          $event['body'] = $icalNode->data['DESCRIPTION']->value;
+          $event['langcode'] = 'en';
+          $event['status'] = 1;
+          $event['field_google_cal_uid'] = $icalNode->data['UID']->value['0'];
+          $event['field_location'] = join('', $icalNode->data['LOCATION']->value);
+          $event['field_event_date'] = [[
+            'value' => $start_date->format('Y-m-d\TH:i:s', ['timezone' => 'UTC']),
+            'end_value' => $end_date->format('Y-m-d\TH:i:s', ['timezone' => 'UTC']),
+            'rrule' => isset($icalNode->data['RRULE']) ? $icalNode->data['RRULE']->value['0'] : NULL,
+            'timezone' => $default_timezone,
+            'infinite' => FALSE,
+          ]];
 
-    $default_timezone = self::$icalobj->tree->data['X-WR-TIMEZONE']->value['0'];
+          $event['field_category'] = '0';
 
-    foreach (self::$icalobj->tree->child as $icalNode) {
-      if ($icalNode->name == 'VEVENT') {
-        $start_date = new DrupalDateTime($icalNode->data['DTSTART']->value['0'], $default_timezone);
-        $end_date = new DrupalDateTime($icalNode->data['DTEND']->value['0'], $default_timezone);
-        $diff = $start_date->diff($end_date);
-
-        if ($diff->d == 1 && $diff->h == 0 && $diff->i == 0) {
-          $end_date = $end_date->getPhpDateTime()->modify('-1 minutes')->format('Y-m-d\TH:i:s');
-          $end_date = new DrupalDateTime($end_date);
+          if ($icalobj['cal_category'] !== NULL) {
+            $event['field_category'] = $icalobj['cal_category'];
+          }
+  
+          self::$icalEvents[$icalNode->data['UID']->value['0']] = $event;
+  
+          // If the event exists, put the details in an array to be updated
+          if (isset(self::$existingEvents[$icalNode->data['UID']->value['0']])) {
+            $eventsToUpdate[$icalNode->data['UID']->value['0']] = $event;
+          // If the event doesn't exist, put the details in an array to be created
+          } else {
+            $eventsToCreate[] = $event;
+          }
         }
-
-        $event = array();
-        $event['type'] = 'events';
-        $event['title'] = $icalNode->data['SUMMARY']->value;
-        $event['body'] = $icalNode->data['DESCRIPTION']->value;
-        $event['langcode'] = 'en';
-        $event['status'] = 1;
-        $event['field_google_cal_uid'] = $icalNode->data['UID']->value['0'];
-        $event['field_location'] = join('', $icalNode->data['LOCATION']->value);
-        $event['field_event_date'] = [[
-          'value' => $start_date->format('Y-m-d\TH:i:s', ['timezone' => 'UTC']),
-          'end_value' => $end_date->format('Y-m-d\TH:i:s', ['timezone' => 'UTC']),
-          'rrule' => $icalNode->data['RRULE'] ? $icalNode->data['RRULE']->value['0'] : NULL,
-          'timezone' => $default_timezone,
-          'infinite' => FALSE,
-        ]];
-
-        self::$icalEvents[$icalNode->data['UID']->value['0']] = $event;
-
-        // If the event exists, put the details in an array to be updated
-        if (isset(self::$existingEvents[$icalNode->data['UID']->value['0']])) {
-          $eventsToUpdate[$icalNode->data['UID']->value['0']] = $event;
-        // If the event doesn't exist, put the details in an array to be created
-        } else {
-          $eventsToCreate[] = $event;
+      }
+  
+      // Create new Event Nodes
+      foreach ($eventsToCreate as $eventData) {
+        $node = Node::create($eventData);
+        $node->save();
+      }
+  
+      // Update existing Event Nodes
+      foreach ($eventsToUpdate as $uid => $eventData) {
+        $eventToUpdate = self::$existingEvents[$uid];
+        foreach ($eventData as $key => $value) {
+          $eventToUpdate->set($key, $value);
         }
+  
+        $eventToUpdate->save();
       }
     }
 
-    // Create new Event Nodes
-    foreach ($eventsToCreate as $eventData) {
-      $node = Node::create($eventData);
-      if ($node->save()) {
-        self::$countCreated = self::$countCreated + 1;
-      }
-    }
-
-    // Update existing Event Nodes
-    foreach ($eventsToUpdate as $uid => $eventData) {
-      $eventToUpdate = self::$existingEvents[$uid];
-      foreach ($eventData as $key => $value) {
-        $eventToUpdate->set($key, $value);
-      }
-
-      if ($eventToUpdate->save()) {
-        self::$countUpdated = self::$countUpdated + 1;
-      };
-    }
   }
 
   public static function deleteRemovedEvents() {
     foreach (self::$existingEvents as $uid => $existingEvent) {
       if (!isset(self::$icalEvents[$uid])) {
-        if ($existingEvent->delete()) {
-          self::$countDeleted = self::$countDeleted + 1;
-        };
+        $existingEvent->delete();
       }
-    }
-  }
-
-  public static function syncComplete($success, $results, $operations) {
-    if ($success) {
-      $success_message = t("Google Cal Synchornization Complete. @createdCount events created. @updatedCount events updated. @deletedCount events deleted.", [
-        '@updatedCount' => self::$countUpdated,
-        '@createdCount' => self::$countCreated,
-        '@deletedCount' => self::$countDeleted
-      ]);
-      drupal_set_message($success_message);
-    }  else {
-      $error_operation = reset($operations);
-      $error_message = t('An error occurred while processing %error_operation with arguments: @arguments', [
-        '%error_operation' => $error_operation[0],
-        '@arguments' => print_r($error_operation[1], TRUE),
-      ]);
-      drupal_set_message($error_message); 
     }
   }
 }
