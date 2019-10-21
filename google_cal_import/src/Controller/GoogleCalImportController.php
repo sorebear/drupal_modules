@@ -39,7 +39,6 @@ class GoogleCalImportController extends ControllerBase {
    */
   public static function getGoogleCalendar() {
     $config = \Drupal::config('google_cal_import.settings');
-    $url = $config->get('feed_url');
 
     for ($i = 1; $i <= 10; $i++) {
       $url = $config->get('feed_url_' . $i);
@@ -83,19 +82,47 @@ class GoogleCalImportController extends ControllerBase {
           $end_date = new DrupalDateTime($icalNode->data['DTEND']->value['0'], $default_timezone);
           $diff = $start_date->diff($end_date);
   
+          // Google calendar stores an all day event with no time and 1 day difference between
+          // the start and end times.
+          // The date recur module stores an all day event as 00:00:00 to 23:59:59 of the same day.
+          // This code changes the format to match what Drupal is anticipating
           if ($diff->d != 0 && $diff->h == 0 && $diff->i == 0) {
             $end_date = $end_date->getPhpDateTime()->modify('-1 minutes')->format('Y-m-d\TH:i:s');
             $end_date = new DrupalDateTime($end_date);
           }
-  
+
           $event = array();
+
+          // Categories can be added to events by using special syntax: {{ category: tag1, tag2 }}
+          // This code checks for tagged categories, removes them from the displayed body text,
+          // then gets the taxonomy id and adds it to the event.
+          $body_text_full = join(',', $icalNode->data['DESCRIPTION']->value);
+          $category_matches = preg_match('/(?:\{\{\ ?category:\ ?)(.*)(?:\}\})/', $body_text_full, $matches);
+          $body_text_parsed = preg_replace('/\{\{\ ?category:\ ?.*\}\}/', '', $body_text_full);
+          $event['body'] = $body_text_parsed;
+
+          if ($category_matches && isset($matches[1])) {
+            $category_arr = explode(',', $matches[1]);
+            $taxonomy_manager = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+            foreach ($category_arr as $category) {
+              $category = trim($category);
+              $term_array = $taxonomy_manager->loadByProperties(['name' => $category]);
+              foreach ($term_array as $tid => $term_content) {
+                $event['field_category'][] = $tid;
+              }
+            }
+          }
+
+          if ($icalobj['cal_category'] !== NULL) {
+            $event['field_category'][] = $icalobj['cal_category'];
+          }
+
           $event['type'] = 'events';
-          $event['title'] = $icalNode->data['SUMMARY']->value;
-          $event['body'] = $icalNode->data['DESCRIPTION']->value;
+          $event['title'] = join(',', $icalNode->data['SUMMARY']->value);
           $event['langcode'] = 'en';
           $event['status'] = 1;
           $event['field_google_cal_uid'] = $icalNode->data['UID']->value['0'];
-          $event['field_location'] = join('', $icalNode->data['LOCATION']->value);
+          $event['field_location'] = join(',', $icalNode->data['LOCATION']->value);
           $event['field_event_date'] = [[
             'value' => $start_date->format('Y-m-d\TH:i:s', ['timezone' => 'UTC']),
             'end_value' => $end_date->format('Y-m-d\TH:i:s', ['timezone' => 'UTC']),
@@ -103,12 +130,6 @@ class GoogleCalImportController extends ControllerBase {
             'timezone' => $default_timezone,
             'infinite' => FALSE,
           ]];
-
-          $event['field_category'] = '0';
-
-          if ($icalobj['cal_category'] !== NULL) {
-            $event['field_category'] = $icalobj['cal_category'];
-          }
   
           self::$icalEvents[$icalNode->data['UID']->value['0']] = $event;
   
@@ -141,6 +162,10 @@ class GoogleCalImportController extends ControllerBase {
 
   }
 
+  /**
+   * Find all nodes created by a Google Calendar import that are
+   * no longer present on the Google Calendar and delete them.
+   */
   public static function deleteRemovedEvents() {
     foreach (self::$existingEvents as $uid => $existingEvent) {
       if (!isset(self::$icalEvents[$uid])) {
