@@ -1,0 +1,29 @@
+<?php
+
+function toggle_admin_page_attachments_alter(array &$page) {
+  $config = \Drupal::config('toggle_admin.settings');
+
+  // Check if we're on an Admin page
+  $route = \Drupal::routeMatch();
+  $path = $route->getRouteObject()->getPath();
+  $isAdminPage = strpos($path, '/admin') !== false;
+
+  // Check who the current user is
+  $user = \Drupal::currentUser();
+  $isAuthUser = $user->isAuthenticated();
+  $username = $user->getDisplayName();
+
+  // Check if the settings are enabled for the current user
+  // or if no user restrictions are set
+  $isEnabled = $config->get('toggle_enabled');
+  $enabledUsers = array_map('trim', explode(",", $config->get('enable_for_users')));
+  $enabledForUser = $enabledUsers[0] == '' || in_array($username, $enabledUsers, true);
+
+  if ($isEnabled && !$isAdminPage && $isAuthUser && $enabledForUser) {
+    if ($config->get('default_on')) {
+      $page['#attached']['library'][] = 'toggle_admin/default_on';
+    } else {
+      $page['#attached']['library'][] = 'toggle_admin/default_off';
+    }
+  }
+}

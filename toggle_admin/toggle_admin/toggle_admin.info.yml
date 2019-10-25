@@ -1,0 +1,6 @@
+name: Toggle Admin
+type: module
+description: A convienient toggle for hiding/showing the admin menu.
+package: 360 Custom
+core: 8.x
+configure: toggle_admin.settings

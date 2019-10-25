@@ -122,8 +122,8 @@ class GoogleCalImportController extends ControllerBase {
           $event['langcode'] = 'en';
           $event['status'] = 1;
           $event['field_google_cal_uid'] = $icalNode->data['UID']->value['0'];
-          $event['field_location'] = join(',', $icalNode->data['LOCATION']->value);
-          $event['field_event_date'] = [[
+          $event['field_event_location'] = join(',', $icalNode->data['LOCATION']->value);
+          $event['field_recurring_event_date'] = [[
             'value' => $start_date->format('Y-m-d\TH:i:s', ['timezone' => 'UTC']),
             'end_value' => $end_date->format('Y-m-d\TH:i:s', ['timezone' => 'UTC']),
             'rrule' => isset($icalNode->data['RRULE']) ? $icalNode->data['RRULE']->value['0'] : NULL,

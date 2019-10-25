@@ -4,11 +4,6 @@ namespace Drupal\google_cal_import\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\google_cal_import\Controller\GoogleCalImportController;
-use Drupal\node\Entity\Node;
-use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\date_recur\Event\DateRecurValueEvent;
-use ZCiCal;
 
 require_once(drupal_get_path('module', 'google_cal_import') . '/src/ical_parser/zapcallib.php');
 
@@ -51,10 +46,6 @@ class GoogleCalImportForm extends ConfigFormBase {
       '#type' => 'fieldset',
       '#title' => $this->t('Instructions for Adding Categories'),
       '#description' => $this->t("You can add categories to individual events by adding the following syntax into the calendar's description: {{ category: tag_1, tag_2, tag_3 }}. Example: {{ category: Music, Parks and Rec }}"),
-    );
-
-    $form['instructions']['syntax'] = array(
-      '#description' => $this->t('Testing part 2'),
     );
 
     $form['feed_1'] = array(
@@ -291,117 +282,6 @@ class GoogleCalImportForm extends ConfigFormBase {
   
     $config->save();
 
-    // kint($config);
-    // kill();
-
     drupal_set_message(t('Configuration saved.'));
-
-    // // Get Current Event Nodes
-    // $node_stoarge = \Drupal::entityTypeManager()->getStorage('node');
-    // $eventNids = \Drupal::entityQuery('node')->condition('type', 'events')->execute();
-    // $eventNodes = $node_stoarge->loadMultiple($eventNids);
-
-    // $existingEvents = [];
-    // foreach ($eventNodes as $eventNode) {
-    //   $googleCalUid = $eventNode->get('field_google_cal_uid')->getValue();
-    //   if ($googleCalUid) {
-    //     $existingEvents[$googleCalUid['0']['value']] = $eventNode;
-    //   }
-    // }
-
-    // for ($i = 1; $i <= 10; $i++) {
-    //   $url = $values['feed_url_' . $i];
-    //   kint($url);
-    //   $ch = curl_init();
-    //   curl_setopt($ch, CURLOPT_URL, $url);
-    //   curl_setopt($ch, CURLOPT_POST, FALSE);
-    //   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-  
-    //   $icalstring = curl_exec($ch);
-    //   curl_close($ch);
-  
-    //   if (!$icalstring) {
-    //     return;
-    //   }
-
-    //   kint($icalstring);
-    // }
-  
-    //   // Create an iCal object using the ZCiCal library
-    //   $icalobj = new ZCiCal($icalstring);
-    //   // kill();
-  
-    //   // $eventsToCreate = [];
-    //   // $eventsToUpdate = [];
-  
-    //   $default_timezone = $icalobj->tree->data['X-WR-TIMEZONE']->value['0'];
-  
-    //   // Get the pertinent information from each event in the iCal object
-    //   foreach ($icalobj->tree->child as $icalNode) {
-    //     if ($icalNode->name == 'VEVENT') {
-    //       $start_date = new DrupalDateTime($icalNode->data['DTSTART']->value['0'], $default_timezone);
-    //       $end_date = new DrupalDateTime($icalNode->data['DTEND']->value['0'], $default_timezone);
-    //       $diff = $start_date->diff($end_date);
-  
-    //       if ($diff->d == 1 && $diff->h == 0 && $diff->i == 0) {
-    //         echo 'ALL DAY';
-    //         $end_date = $end_date->getPhpDateTime()->modify('-1 minutes')->format('Y-m-d\TH:i:s');
-    //         $end_date = new DrupalDateTime($end_date);
-    //         kint($end_date);
-    //       }
-  
-    //       $event = array();
-  
-    //       kint($icalNode->data['DESCRIPTION']->value);
-    //       $body_text_full = join(',', $icalNode->data['DESCRIPTION']->value);
-    //       $category_matches = preg_match('/(?:\{\{\ ?category:\ ?)(.*)(?:\}\})/', $body_text_full, $matches);
-    //       $body_text_parsed = preg_replace('/\{\{\ ?category:\ ?.*\}\}/', '', $body_text_full);
-    //       $body_text_parsed = trim($body_text_parsed);
-    //       $event['body'] = $body_text_parsed;
-
-    //       kint($body_text_full);
-    //       kint($category_matches);
-    //       kint($body_text_parsed);
-    //       kint(join(',', $icalNode->data['SUMMARY']->value));
-
-    //       if ($category_matches && isset($matches[1])) {
-    //         $category_arr = explode(',', $matches[1]);
-    //         $taxonomy_manager = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
-    //         foreach ($category_arr as $category) {
-    //           $term_array = $taxonomy_manager->loadByProperties(['name' => $category]);
-    //           echo 'Term Array';
-    //           kint($term_array);
-    //           foreach ($term_array as $tid => $term_content) {
-    //             $event['field_category'][] = $tid;
-    //           }
-    //         }
-    //       }
-  
-    //       $event['type'] = 'events';
-    //       $event['title'] = join(',', $icalNode->data['SUMMARY']->value);
-    //       $event['langcode'] = 'en';
-    //       $event['status'] = 1;
-    //       $event['field_google_cal_uid'] = $icalNode->data['UID']->value['0'];
-    //       $event['field_location'] = join(',', $icalNode->data['LOCATION']->value);
-    //       $event['field_event_date'] = [
-    //         [
-    //           'value' => $start_date->format('Y-m-d\TH:i:s', ['timezone' => 'UTC']),
-    //           'end_value' => $end_date->format('Y-m-d\TH:i:s', ['timezone' => 'UTC']),
-    //           'rrule' => $icalNode->data['RRULE'] ? $icalNode->data['RRULE']->value['0'] : NULL,
-    //           'timezone' => $default_timezone,
-    //           'infinite' => FALSE,
-    //         ]
-    //       ];
-  
-    //       // If the event exists, put the details in an array to be updated
-    //       // if ($existingEvents[$icalNode->data['UID']->value['0']]) {
-    //       //   $eventsToUpdate[$icalNode->data['UID']->value['0']] = $event;
-    //       // // If the event doesn't exist, put the details in an array to be created
-    //       // } else {
-    //       //   $eventsToCreate[] = $event;
-    //       // }
-    //     }
-    //   }
-    // }
   }
 }

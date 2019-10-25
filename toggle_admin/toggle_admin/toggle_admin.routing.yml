@@ -1,0 +1,7 @@
+toggle_admin.settings:
+  path: '/admin/config/user-interface/toggle-admin'
+  defaults:
+    _title: 'Admin Menu Toggle Settings'
+    _form: '\Drupal\toggle_admin\Form\ToggleAdminSettingsForm'
+  requirements:
+    _permission: 'administer toggle admin'
