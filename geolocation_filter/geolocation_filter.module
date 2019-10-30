@@ -19,8 +19,8 @@ function geolocation_filter_ip_form_validate(&$form, $form_state) {
   
   foreach($blockedIps as $blockedIp) {
     if (trim($blockedIp) === $ip_address) {
-      \Drupal::logger('geolocation_filter')->notice(t('A form submission from a blacklisted IP Address, "' . $ip_address . '" on the form "' . $form->id() . '"was blocked.'));
-      $form_state->setErrorByName('', t('There was a problem with your form submission. Please try again later. You are a blocked IP'));
+      \Drupal::logger('geolocation_filter')->notice(t('The webform "'. $form['#webform_id'] . '" received a submission from a blacklisted IP Address, "' . $ip_address . '" and was blocked.'));
+      $form_state->setErrorByName('', t('There was a problem with your form submission. Please try again later.'));
       return;
     }
   }
@@ -48,7 +48,7 @@ function geolocation_filter_ip_form_validate(&$form, $form_state) {
 
   foreach ($blockedCountryCodes as $blockedCountryCode) {
     if (trim($blockedCountryCode) === $country_code) {
-      \Drupal::logger('geolocation_filter')->notice(t('A form submission from a blacklisted Country Code, "' . $country_code . '" on the form "' . $form->id() . '"was blocked.'));
+      \Drupal::logger('geolocation_filter')->notice(t('The webform "' . $form['#webform_id'] . '" received a submission from the IP Address "'. $ip_address . '", which is from the blacklisted Country Code "' . $country_code . '", and was blocked.'));
       $form_state->setErrorByName('', t('There was a problem with your form submission. Please try again later. You are from a blocked country'));
       return;
     }
