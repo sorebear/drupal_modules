@@ -1,0 +1,58 @@
+<?php 
+
+function geolocation_filter_form_alter(&$form, $form_state, $form_id) {
+  // Check if it is a Web Form
+  if (isset($form['#webform_id'])) {
+    $form['actions']['submit']['#validate'][] = 'geolocation_filter_ip_form_validate';
+  }
+}
+
+function geolocation_filter_ip_form_validate(&$form, $form_state) {
+  $config = \Drupal::config('geolocation_filter.settings');
+
+  $ip_address = $_SERVER['REMOTE_ADDR'];
+
+  // Compare the ip address with the blocked addresses
+  // selected in the module settings
+  $blockedIps = $config->get('blocked_ip_addresses');
+  $blockedIps = explode(',', $blockedIps);
+  
+  foreach($blockedIps as $blockedIp) {
+    if (trim($blockedIp) === $ip_address) {
+      \Drupal::logger('geolocation_filter')->notice(t('A form submission from a blacklisted IP Address, "' . $ip_address . '" on the form "' . $form->id() . '"was blocked.'));
+      $form_state->setErrorByName('', t('There was a problem with your form submission. Please try again later. You are a blocked IP'));
+      return;
+    }
+  }
+
+  $ch = curl_init();
+  // set url
+  curl_setopt($ch, CURLOPT_URL, "http://geoip.maxmind.com/f?l=bx8Q50Nzl0L2&i=" . $ip_address);
+
+  // return the transfer as a string
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+  // $output contains the output string
+  $output = curl_exec($ch);
+
+  // close curl resource to free up system resources
+  curl_close($ch);
+
+  $output_array = explode(',', $output);
+  $country_code = $output_array[0];
+
+  // Compare the country code with the blocked Countries
+  // selected in the module settings
+  $blockedCountryCodes = $config->get('blocked_countries');
+  $blockedCountryCodes = explode(',', $blockedCountryCodes);
+
+  foreach ($blockedCountryCodes as $blockedCountryCode) {
+    if (trim($blockedCountryCode) === $country_code) {
+      \Drupal::logger('geolocation_filter')->notice(t('A form submission from a blacklisted Country Code, "' . $country_code . '" on the form "' . $form->id() . '"was blocked.'));
+      $form_state->setErrorByName('', t('There was a problem with your form submission. Please try again later. You are from a blocked country'));
+      return;
+    }
+  }
+
+  \Drupal::logger('geolocation_filter')->notice(t('Test Geolocation Log'));
+}

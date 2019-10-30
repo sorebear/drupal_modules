@@ -1,0 +1,7 @@
+geolocation_filter.settings:
+  path: '/admin/config/development/geolocation-filter'
+  defaults:
+    _title: 'Geolocation Filter'
+    _form: '\Drupal\geolocation_filter\Form\GeolocationFilterSettingsForm'
+  requirements:
+    _permission: 'administer geolocation filter'

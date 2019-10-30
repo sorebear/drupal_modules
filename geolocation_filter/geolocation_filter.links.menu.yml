@@ -1,0 +1,5 @@
+geolocation_filter.settings:
+  title: Geolocation Filter
+  description: Block Webform submissions from specific countries or IP addresses
+  parent: system.admin_config_development
+  route_name: geolocation_filter.settings

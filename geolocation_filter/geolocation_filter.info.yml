@@ -1,0 +1,7 @@
+name: Geolocation Filter
+type: module
+core: 8.x
+package: 360 Custom
+description: Block form submissions originating from specific countries or specific IP addresses
+dependencies:
+  - drupal:webform
